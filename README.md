@@ -73,3 +73,13 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## CI/CD Pipeline
+
+This project includes a GitHub Actions pipeline at `.github/workflows/ci-cd.yml`.
+
+- `build-and-test` job:
+  - installs dependencies
+  - builds the Nuxt project
+  - runs unit tests with coverage (`pnpm test:coverage`)
+  - publishes `coverage-report` and `nuxt-output` artifacts
