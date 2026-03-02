@@ -37,7 +37,38 @@ jobs:
 
       - name: Add coverage to job summary
         run: |
-          node --input-type=module -e "import fs from 'node:fs'; const summaryPath = 'coverage/coverage-summary.json'; if (!fs.existsSync(summaryPath)) { console.log('coverage-summary.json not found'); process.exit(0); } const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8')); const total = summary.total ?? {}; const row = `| ${total.lines?.pct ?? 0}% | ${total.statements?.pct ?? 0}% | ${total.functions?.pct ?? 0}% | ${total.branches?.pct ?? 0}% |`; const md = ['## Coverage Report', '', '| Lines | Statements | Functions | Branches |', '| --- | --- | --- | --- |', row, ''].join('\n'); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);"
+          node <<'NODE'
+          const fs = require('node:fs')
+
+          const summaryPath = 'coverage/coverage-summary.json'
+          if (!fs.existsSync(summaryPath)) {
+            console.log('coverage-summary.json not found')
+            process.exit(0)
+          }
+
+          const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'))
+          const total = summary.total ?? {}
+
+          const toPct = (value) => {
+            const numeric = Number(value)
+            return Number.isFinite(numeric) ? numeric.toFixed(2) : '0.00'
+          }
+
+          const markdown = [
+            '## Coverage Report',
+            '',
+            '| Metric | % |',
+            '| --- | --- |',
+            `| Lines | ${toPct(total.lines?.pct)}% |`,
+            `| Statements | ${toPct(total.statements?.pct)}% |`,
+            `| Functions | ${toPct(total.functions?.pct)}% |`,
+            `| Branches | ${toPct(total.branches?.pct)}% |`,
+            ''
+          ].join('\n')
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown)
+          fs.writeFileSync('coverage-summary.md', markdown)
+          NODE
 
       - name: Publish coverage artifact
         uses: actions/upload-artifact@v4
